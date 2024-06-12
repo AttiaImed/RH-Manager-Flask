@@ -6,9 +6,12 @@ from tensorflow.keras import backend as K
 import numpy as np
 import PIL
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 
 app = Flask(__name__)
+
+CORS(app)
 
 
 model_path = 'data/Files_for_Face_verification_and_Recognition/model'
@@ -41,7 +44,7 @@ def img_to_encoding(image, model):
 
 
 database = {
-    "kian": img_to_encoding("data/imed/imed1.jpg", FRmodel),
+    "5": img_to_encoding("data/imed/imedesprit.jpg", FRmodel),
 }
 
 
@@ -81,8 +84,8 @@ def who_is_it(image, database, model):
             min_dist = dist
             identity = name
 
-    if (min_dist > 0.7):
-        result = "Not in the database."
+    if min_dist > 0.8:
+        result = f"Not in the database. occurance : {min_dist}"
     else:
         result = f"It's {identity}, the distance is {min_dist}"
 
@@ -91,6 +94,7 @@ def who_is_it(image, database, model):
 
 @app.route('/whoisit', methods=['POST'])
 def whoisit_endpoint():
+    print(request)
     if 'file' not in request.files:
         return jsonify({'error': 'No file part in the request'}), 400
     file = request.files['file']
@@ -101,10 +105,16 @@ def whoisit_endpoint():
     image = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
 
     min_dist, identity, result = who_is_it(image, database, model)
+    print(result)
     return jsonify({
-        'min_dist': min_dist,
-        'identity': identity,
         'result': result
+    })
+
+
+@app.route('/me', methods=['GET'])
+def me_endpoint():
+    return jsonify({
+        'result': 'ok'
     })
 
 
